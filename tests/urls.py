@@ -1,6 +1,5 @@
-# -*- coding: utf-8 -*-
-from django.conf.urls import include, url
+from django.urls import include, path
 
 urlpatterns = [
-    url(r'^accounts/', include('allauth.urls')),
+    path("accounts/", include("allauth.urls")),
 ]

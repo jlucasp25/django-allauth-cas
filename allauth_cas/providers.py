@@ -1,26 +1,18 @@
-# -*- coding: utf-8 -*-
-from six.moves.urllib.parse import parse_qsl
+from urllib.parse import parse_qsl
 
-import django
+from allauth.socialaccount.providers.base import Provider
 from django.contrib import messages
 from django.template.loader import render_to_string
+from django.urls import reverse
 from django.utils.http import urlencode
 from django.utils.safestring import mark_safe
 
-from allauth.socialaccount.providers.base import Provider
-
-if django.VERSION >= (1, 10):
-    from django.urls import reverse
-else:
-    from django.core.urlresolvers import reverse
-
 
 class CASProvider(Provider):
-
     def get_auth_params(self, request, action):
         settings = self.get_settings()
-        ret = dict(settings.get('AUTH_PARAMS', {}))
-        dynamic_auth_params = request.GET.get('auth_params')
+        ret = dict(settings.get("AUTH_PARAMS", {}))
+        dynamic_auth_params = request.GET.get("auth_params")
         if dynamic_auth_params:
             ret.update(dict(parse_qsl(dynamic_auth_params)))
         return ret
@@ -68,11 +60,11 @@ class CASProvider(Provider):
         """
         uid, extra = data
         return {
-            'username': extra.get('username', uid),
-            'email': extra.get('email'),
-            'first_name': extra.get('first_name'),
-            'last_name': extra.get('last_name'),
-            'name': extra.get('name'),
+            "username": extra.get("username", uid),
+            "email": extra.get("email"),
+            "first_name": extra.get("first_name"),
+            "last_name": extra.get("last_name"),
+            "name": extra.get("name"),
         }
 
     def extract_email_addresses(self, data):
@@ -99,7 +91,7 @@ class CASProvider(Provider):
                 ]
 
         """
-        return super(CASProvider, self).extract_email_addresses(data)
+        return super().extract_email_addresses(data)
 
     def extract_extra_data(self, data):
         """Extract the data to save to `SocialAccount.extra_data`.
@@ -119,7 +111,10 @@ class CASProvider(Provider):
     ##
 
     def add_message_suggest_caslogout(
-        self, request, next_page=None, level=None,
+        self,
+        request,
+        next_page=None,
+        level=None,
     ):
         """Add a message with a link for the user to logout of the CAS server.
 
@@ -144,14 +139,15 @@ class CASProvider(Provider):
         # DefaultAccountAdapter.add_message is unusable because it always
         # escape the message content.
 
-        template = 'socialaccount/messages/suggest_caslogout.html'
+        template = "socialaccount/messages/suggest_caslogout.html"
         context = {
-            'provider': self,
-            'logout_url': logout_url,
+            "provider": self,
+            "logout_url": logout_url,
         }
 
         messages.add_message(
-            request, level,
+            request,
+            level,
             mark_safe(render_to_string(template, context).strip()),
             fail_silently=True,
         )
@@ -168,10 +164,7 @@ class CASProvider(Provider):
             signal ``user_logged_out``.
 
         """
-        return (
-            self.get_settings()
-            .get('MESSAGE_SUGGEST_CASLOGOUT_ON_LOGOUT', False)
-        )
+        return self.get_settings().get("MESSAGE_SUGGEST_CASLOGOUT_ON_LOGOUT", False)
 
     def message_suggest_caslogout_on_logout_level(self, request):
         """Level of the logout message issued on user logout.
@@ -185,9 +178,8 @@ class CASProvider(Provider):
             signal ``user_logged_out``.
 
         """
-        return (
-            self.get_settings()
-            .get('MESSAGE_SUGGEST_CASLOGOUT_ON_LOGOUT_LEVEL', messages.INFO)
+        return self.get_settings().get(
+            "MESSAGE_SUGGEST_CASLOGOUT_ON_LOGOUT_LEVEL", messages.INFO
         )
 
     ##
@@ -195,19 +187,19 @@ class CASProvider(Provider):
     ##
 
     def get_login_url(self, request, **kwargs):
-        url = reverse(self.id + '_login')
+        url = reverse(self.id + "_login")
         if kwargs:
-            url += '?' + urlencode(kwargs)
+            url += "?" + urlencode(kwargs)
         return url
 
     def get_callback_url(self, request, **kwargs):
-        url = reverse(self.id + '_callback')
+        url = reverse(self.id + "_callback")
         if kwargs:
-            url += '?' + urlencode(kwargs)
+            url += "?" + urlencode(kwargs)
         return url
 
     def get_logout_url(self, request, **kwargs):
-        url = reverse(self.id + '_logout')
+        url = reverse(self.id + "_logout")
         if kwargs:
-            url += '?' + urlencode(kwargs)
+            url += "?" + urlencode(kwargs)
         return url

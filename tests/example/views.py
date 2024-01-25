@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 from allauth_cas import views
 
 from .provider import ExampleCASProvider
@@ -6,7 +5,7 @@ from .provider import ExampleCASProvider
 
 class ExampleCASAdapter(views.CASAdapter):
     provider_id = ExampleCASProvider.id
-    url = 'https://server.cas'
+    url = "https://server.cas"
     version = 2
 
 

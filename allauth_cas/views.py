@@ -1,28 +1,26 @@
-# -*- coding: utf-8 -*-
-from django.http import HttpResponseRedirect
-from django.utils.functional import cached_property
-
+import cas
 from allauth.account.adapter import get_adapter
 from allauth.account.utils import get_next_redirect_url
 from allauth.socialaccount import providers
 from allauth.socialaccount.helpers import (
-    complete_social_login, render_authentication_error,
+    complete_social_login,
+    render_authentication_error,
 )
 from allauth.socialaccount.models import SocialLogin
-
-import cas
+from django.http import HttpResponseRedirect
+from django.utils.functional import cached_property
 
 from . import CAS_PROVIDER_SESSION_KEY
 from .exceptions import CASAuthenticationError
 
 
-class AuthAction(object):
-    AUTHENTICATE = 'authenticate'
-    REAUTHENTICATE = 'reauthenticate'
-    DEAUTHENTICATE = 'deauthenticate'
+class AuthAction:
+    AUTHENTICATE = "authenticate"
+    REAUTHENTICATE = "reauthenticate"
+    DEAUTHENTICATE = "deauthenticate"
 
 
-class CASAdapter(object):
+class CASAdapter:
     #: CAS server url.
     url = None
     #: CAS server version.
@@ -92,19 +90,19 @@ class CASAdapter(object):
         """
         redirect_to = get_next_redirect_url(request)
 
-        callback_kwargs = {'next': redirect_to} if redirect_to else {}
-        callback_url = (
-            self.provider.get_callback_url(request, **callback_kwargs))
+        callback_kwargs = {"next": redirect_to} if redirect_to else {}
+        callback_url = self.provider.get_callback_url(request, **callback_kwargs)
 
         service_url = request.build_absolute_uri(callback_url)
 
         return service_url
 
 
-class CASView(object):
+class CASView:
     """
     Base class for CAS views.
     """
+
     @classmethod
     def adapter_view(cls, adapter):
         """Transform the view class into a view function.
@@ -124,6 +122,7 @@ class CASView(object):
 
 
         """
+
         def view(request, *args, **kwargs):
             # Prepare the func-view.
             self = cls()
@@ -169,19 +168,17 @@ class CASView(object):
 
 
 class CASLoginView(CASView):
-
     def dispatch(self, request):
         """
         Redirects to the CAS server login page.
         """
-        action = request.GET.get('action', AuthAction.AUTHENTICATE)
+        action = request.GET.get("action", AuthAction.AUTHENTICATE)
         SocialLogin.stash_state(request)
         client = self.get_client(request, action=action)
         return HttpResponseRedirect(client.get_login_url())
 
 
 class CASCallbackView(CASView):
-
     def dispatch(self, request):
         """
         The CAS server redirects the user to this view after a successful
@@ -195,11 +192,9 @@ class CASCallbackView(CASView):
 
         # CAS server should let a ticket.
         try:
-            ticket = request.GET['ticket']
+            ticket = request.GET["ticket"]
         except KeyError:
-            raise CASAuthenticationError(
-                "CAS server didn't respond with a ticket."
-            )
+            raise CASAuthenticationError("CAS server didn't respond with a ticket.")
 
         # Check ticket validity.
         # Response format on:
@@ -210,9 +205,7 @@ class CASCallbackView(CASView):
         uid, extra, _ = response
 
         if not uid:
-            raise CASAuthenticationError(
-                "CAS server doesn't validate the ticket."
-            )
+            raise CASAuthenticationError("CAS server doesn't validate the ticket.")
 
         # Keep tracks of the last used CAS provider.
         request.session[CAS_PROVIDER_SESSION_KEY] = self.provider.id
@@ -226,7 +219,6 @@ class CASCallbackView(CASView):
 
 
 class CASLogoutView(CASView):
-
     def dispatch(self, request, next_page=None):
         """
         Redirects to the CAS server logout page.
@@ -248,7 +240,6 @@ class CASLogoutView(CASView):
         Returns the url to redirect after logout.
         """
         request = self.request
-        return (
-            get_next_redirect_url(request) or
-            get_adapter(request).get_logout_redirect_url(request)
-        )
+        return get_next_redirect_url(request) or get_adapter(
+            request
+        ).get_logout_redirect_url(request)
